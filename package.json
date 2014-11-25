@@ -1,0 +1,17 @@
+{
+  "name": "gameboard",
+  "version": "0.0.1",
+  "description": "simple canvas wrapper for visualizing output from game engines",
+  "main": "index.js",
+  "scripts": {
+    "build": "browserify example/example.js -o example/bundle.js",
+    "watch": "watchify example/example.js -o example/bundle.js",
+    "example": "npm run build && open example/index.html"
+  },
+  "author": "Alexander Vados",
+  "license": "MIT",
+  "devDependencies": {
+    "browserify": "^6.3.2",
+    "watchify": "^2.1.1"
+  }
+}
