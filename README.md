@@ -3,6 +3,20 @@
 Seriously simple. Just plain ol' tiles n' units. You'll have to use other modules or build your own parts to run around this. See example.
 
 ![](./readme.png)
+
+## Get it
+
+#### Installation
+```bash
+npm install gameboard
+```
+
+#### Building the example
+Running the following will browserify example and open a browser window for you.
+```bash
+npm install && npm run example
+```
+
 ## Usage
 ```javascript
 var assets = require('./some-image-loader');
@@ -49,15 +63,18 @@ var newUnit = {
 };
 
 var tiles = [
-{
-    location: {
-        x: 0,
-        y: 0
+    {
+        location: { x: 0, y: 0 },
+        style: 'grass_a',
+        visible: true,
+        units: [newUnit]
     },
-    style: 'grass_a',
-    visible: true,
-    units: [newUnit]
-}
+    {
+        location: { x: 1, y: 0 },
+        style: 'grass_a',
+        visible: true,
+        units: []
+    }
 ];
 
 gameBoard.tileUpdate(tiles);
@@ -67,35 +84,8 @@ gameBoard.tileUpdate(tiles);
 Convenience method to directly draw a tile to canvas.
 If `render()` loop is active, tile will be added to `GameBoard.tiles`.
 
-```javascript
-var tile = {
-    location: {
-        x: 0,
-        y: 0
-    },
-    style: 'grass_a',
-    visible: true,
-    units: []
-};
-
-gameBoard.addTile(tile);
-```
-
 ## GameBoard.addUnit(unit)
 Convenience method to directly draw a unit to canvas. If `render()` loop is active, unit will be added to `GameBoard.units`.
-
-```javascript
-var unit = {
-    style: 'woman',
-    size: [1,2],
-    location: {
-        x: 2,
-        y: 2
-    }
-}
-
-gameBoard.addUnit(unit);
-```
 
 ## Tile
 
@@ -154,4 +144,5 @@ var gameBoard = new GameBoard({
 });
 ```
 The GameBoard will be accessing your assets by its `style` attribute.
+
 For example, if `unit.style` is `'woman'`, the GameBoard will search through its `assets` hash for `GameBoard.assets['woman']`, which will reference your sprite!

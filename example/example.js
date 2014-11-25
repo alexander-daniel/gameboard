@@ -3,7 +3,7 @@
 
 var woman = new Image();
 var man = new Image();
-var grass = new Image()
+var grass = new Image();
 var tree = new Image();
 
 woman.src = '../assets/woman.png';
