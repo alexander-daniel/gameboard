@@ -155,3 +155,8 @@ just run:
 ```bash
 npm test
 ```
+
+Which will spit out a URL for you to visit in your favourite browser!
+```bash
+http://localhost:51927/__testling?show=true
+```
