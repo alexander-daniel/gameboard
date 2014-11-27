@@ -1,12 +1,14 @@
 'use strict';
 
 var EventEmitter = require('events').EventEmitter;
+var hat = require('hat');
 
 function GameBoard (opts) {
     if (!(this instanceof GameBoard)) return new GameBoard(opts);
 
     this.controller    = opts.controller || new EventEmitter();
     this.tiles         = opts.tiles || {};
+    this.units         = opts.units || {};
     this.sortedUnits   = [];
     this.TILESIZE      = opts.TILESIZE || 16;
     this.FPS           = opts.FPS || 30;
@@ -23,12 +25,21 @@ var proto = GameBoard.prototype;
 
 proto.tileUpdate = function (tiles) {
     var self = this;
-    tiles.forEach(function (tile) {
+    var tileUnits = self.scrapeUnits(tiles);
+    
+    tiles.forEach(manageTile);
+    tileUnits.forEach(manageUnit);
+
+    function manageUnit (unit) {
+        if (!unit.id) unit.id = hat();
+        self.units[unit.id] = unit;
+        self.sortUnits();
+    }
+
+    function manageTile (tile) {
         var tileKey = tile.location.x + ':' + tile.location.y;
         self.tiles[tileKey] = tile;
-    });
-
-    self.sortedUnits = self.getSortedUnits(self.tiles);
+    }
 };
 
 proto.draw = function () {
@@ -94,7 +105,6 @@ proto.start = function () {
     function render () {
         setInterval(function () {
             self.clear();
-            //if (requestAnimationFrame) requestAnimationFrame(render);
             self.draw();
         }, 1000 / FPS);
     }
@@ -102,15 +112,17 @@ proto.start = function () {
 };
 
 proto.addUnit = function (unit) {
-    this.sortedUnits.push(unit);
-    this.sortedUnits = this.sortedUnits.sort(compare);
+    if (!unit.id) unit.id = hat();
+    console.log(unit.id);
+    this.units[unit.id] = unit;
+    this.sortUnits();
 };
 
 proto.addTile = function (tile) {
     return this.tileUpdate([tile]);
 };
 
-proto.getSortedUnits = function (tiles) {
+proto.scrapeUnits = function (tiles) {
     var tileArray = Object.keys(tiles);
     var units = [];
     if (!tileArray.length) return units;
@@ -123,8 +135,20 @@ proto.getSortedUnits = function (tiles) {
             units.push(unit);
         });
     });
-    units.sort(compare);
+
     return units;
+};
+
+proto.sortUnits = function () {
+    var self = this;
+    var units = self.units;
+    var unitArray = [];
+    Object.keys(units).forEach(function (unitId) {
+        var unit = units[unitId];
+        unitArray.push(unit);
+    });
+    unitArray.sort(compare);
+    self.sortedUnits = unitArray;
 };
 
 proto.getPosition = function (location) {
