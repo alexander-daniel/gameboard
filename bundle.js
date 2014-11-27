@@ -1,277 +1,4 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-'use strict';
-
-
-var woman = new Image();
-var man = new Image();
-var grass = new Image();
-var tree = new Image();
-
-woman.src = '../assets/woman.png';
-man.src = '../assets/man.png';
-grass.src = '../assets/grass.png';
-tree.src = '../assets/tree.png';
-
-var assets = {
-    woman: woman,
-    man: man,
-    grass: grass,
-    tree: tree
-};
-
-var GameBoard = require('../index');
-var canvas = document.getElementById('gameCanvas');
-
-var gameBoard = new GameBoard({
-    canvas: canvas,
-    tiles: {},
-    tileSize: 16,
-    width: 10,
-    height: 10,
-    FPS: 20,
-    grid: true, // really slows down performance
-    assets: assets
-});
-
-var tiles = require('./tiles')(10,10); // create 10x10 blank map
-var eve = require('./units').Woman;
-var adam = require('./units').Man;
-var treeOfLife = require('./units').Tree;
-
-gameBoard.start();
-gameBoard.tileUpdate(tiles);
-gameBoard.addUnit(treeOfLife);
-gameBoard.addUnit(eve);
-gameBoard.addUnit(adam);
-
-setInterval(function () {
-    randomLocation(adam);
-    randomLocation(eve);
-}, 1000);
-
-
-function randomLocation (unit) {
-    var rand = Math.floor(Math.random() * 3);
-    if (rand === 0) unit.location.x ++;
-    if (rand === 1) unit.location.y ++;
-    if (rand === 2) unit.location.x --;
-    if (rand === 3) unit.location.y --;
-}
-
-},{"../index":4,"./tiles":2,"./units":3}],2:[function(require,module,exports){
-module.exports = createMap;
-
-function createMap (x, y) {
-    var map = [];
-    for (var i = 0; i < x; i ++) {
-        for (var j = 0; j < y; j++) {
-            var tile = {
-                location: {x: i, y: j},
-                style: 'grass',
-                visible: true,
-                units: []
-            }
-            map.push(tile);
-        }
-    }
-    return map;
-}
-
-},{}],3:[function(require,module,exports){
-var units = [
-{
-    style: 'woman',
-    size: [1,2],
-    location: {
-        x: 2,
-        y: 2
-    }
-}
-];
-
-var Woman = {
-    style: 'woman',
-    size: [1,2],
-    location: {
-        x: 3,
-        y: 2
-    }
-};
-
-var Man = {
-    style: 'man',
-    size: [1,2],
-    location: {
-        x: 5,
-        y: 4
-    }
-};
-
-var Tree = {
-    style: 'tree',
-    size: [3,3],
-    location: {
-        x: 4,
-        y: 8
-    }
-};
-
-exports.units = units;
-exports.Woman = Woman;
-exports.Man = Man;
-exports.Tree = Tree;
-
-},{}],4:[function(require,module,exports){
-'use strict';
-
-var EventEmitter = require('events').EventEmitter;
-
-function GameBoard (opts) {
-    if (!(this instanceof GameBoard)) return new GameBoard(opts);
-
-    this.controller    = opts.controller || new EventEmitter();
-    this.tiles         = opts.tiles || {};
-    this.sortedUnits   = [];
-    this.TILESIZE      = opts.TILESIZE || 16;
-    this.FPS           = opts.FPS || 30;
-    this.canvas        = opts.canvas;
-    this.canvas.height = opts.height * this.TILESIZE + 1 || 418;
-    this.canvas.width  = opts.width * this.TILESIZE + 1 || 514;
-    this.context       = opts.canvas.getContext('2d');
-    this.grid          = opts.grid || false;
-    this.assets        = opts.assets || {};
-    this.viewOrigin    = { x: 0, y: 0 };
-}
-
-var proto = GameBoard.prototype;
-
-proto.tileUpdate = function (tiles) {
-    var self = this;
-    tiles.forEach(function (tile) {
-        var tileKey = tile.location.x + ':' + tile.location.y;
-        self.tiles[tileKey] = tile;
-    });
-
-    self.sortedUnits = self.getSortedUnits(self.tiles);
-};
-
-proto.draw = function () {
-    var self = this;
-    var canvasWidth = self.canvas.width;
-    var canvasHeight = self.canvas.height;
-    var tiles = Object.keys(self.tiles);
-
-    tiles.forEach(drawTile);
-    if (self.grid) drawGrid();
-    self.sortedUnits.forEach(drawUnit);
-
-    return;
-
-    function drawTile (locationKey) {
-        if (!(self.tiles[locationKey].visible)) return;
-
-        var tile = self.tiles[locationKey];
-        var tilePosition = self.getPosition(tile.location);
-        self.context.drawImage(self.assets[tile.style], tilePosition.x + 0.5, tilePosition.y + 0.5);
-    }
-
-    function drawUnit (unit) {
-        var unitPrepLocation = {
-            x : (unit.location.x - Math.floor(unit.size[0] / 2)),
-            y : (unit.location.y - unit.size[1] + 1)
-        };
-
-        var unitPosition = self.getPosition(unitPrepLocation);
-        self.context.drawImage(self.assets[unit.style], unitPosition.x + 0.5, unitPosition.y + 0.5);
-    }
-
-    function drawGrid () {
-        self.context.strokeStyle = '#ddd';
-        self.context.setLineDash([2,2]);
-        self.context.lineWidth = 1;
-
-        for (var x = 0.5; x < canvasWidth; x += self.TILESIZE) {
-            self.context.moveTo(x, 0);
-            self.context.lineTo(x, canvasHeight);
-        }
-
-        for (var y = 0.5; y < canvasHeight; y += self.TILESIZE) {
-            self.context.moveTo(0, y);
-            self.context.lineTo(canvasWidth, y);
-        }
-
-        self.context.stroke();
-    }
-
-};
-
-proto.clear = function () {
-    var self = this;
-    var canvasWidth = self.canvas.width;
-    var canvasHeight = self.canvas.height;
-    self.context.clearRect(0, 0, canvasWidth, canvasHeight);
-};
-
-proto.start = function () {
-    var self = this;
-    var FPS = this.FPS;
-    function render () {
-        setInterval(function () {
-            self.clear();
-            //if (requestAnimationFrame) requestAnimationFrame(render);
-            self.draw();
-        }, 1000 / FPS);
-    }
-    render();
-};
-
-proto.addUnit = function (unit) {
-    this.sortedUnits.push(unit);
-    this.sortedUnits = this.sortedUnits.sort(compare);
-};
-
-proto.addTile = function (tile) {
-    return this.tileUpdate([tile]);
-};
-
-proto.getSortedUnits = function (tiles) {
-    var tileArray = Object.keys(tiles);
-    var units = [];
-    if (!tileArray.length) return units;
-
-    tileArray.forEach(function getTile(tileLoc) {
-        var tile = tiles[tileLoc];
-        if (!tile.visible) return;
-        if (!tile.units) return;
-        tile.units.forEach(function getUnit(unit) {
-            units.push(unit);
-        });
-    });
-    units.sort(compare);
-    return units;
-};
-
-proto.getPosition = function (location) {
-    var self = this;
-
-    var position = {
-        x : (location.x * 16) + self.viewOrigin.x,
-        y : (location.y * 16) + self.viewOrigin.y
-    };
-    return position;
-};
-
-function compare (a, b) {
-    if (a.location.y < b.location.y) return -1;
-    else if (a.location.y > b.location.y) return 1;
-    else if (a.location.x < b.location.x) return -1;
-    else if (a.location.x > b.location.x) return 1;
-    else return 0;
-}
-
-module.exports = GameBoard;
-
-},{"events":5}],5:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -574,4 +301,277 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}]},{},[1]);
+},{}],2:[function(require,module,exports){
+'use strict';
+
+
+var woman = new Image();
+var man = new Image();
+var grass = new Image();
+var tree = new Image();
+
+woman.src = './assets/woman.png';
+man.src = './assets/man.png';
+grass.src = './assets/grass.png';
+tree.src = './assets/tree.png';
+
+var assets = {
+    woman: woman,
+    man: man,
+    grass: grass,
+    tree: tree
+};
+
+var GameBoard = require('./index');
+var canvas = document.getElementById('gameCanvas');
+
+var gameBoard = new GameBoard({
+    canvas: canvas,
+    tiles: {},
+    tileSize: 16,
+    width: 10,
+    height: 10,
+    FPS: 20,
+    grid: true, // really slows down performance
+    assets: assets
+});
+
+var tiles = require('./tiles')(10,10); // create 10x10 blank map
+var eve = require('./units').Woman;
+var adam = require('./units').Man;
+var treeOfLife = require('./units').Tree;
+
+gameBoard.start();
+gameBoard.tileUpdate(tiles);
+gameBoard.addUnit(treeOfLife);
+gameBoard.addUnit(eve);
+gameBoard.addUnit(adam);
+
+setInterval(function () {
+    randomLocation(adam);
+    randomLocation(eve);
+}, 1000);
+
+
+function randomLocation (unit) {
+    var rand = Math.floor(Math.random() * 3);
+    if (rand === 0) unit.location.x ++;
+    if (rand === 1) unit.location.y ++;
+    if (rand === 2) unit.location.x --;
+    if (rand === 3) unit.location.y --;
+}
+
+},{"./index":3,"./tiles":4,"./units":5}],3:[function(require,module,exports){
+'use strict';
+
+var EventEmitter = require('events').EventEmitter;
+
+function GameBoard (opts) {
+    if (!(this instanceof GameBoard)) return new GameBoard(opts);
+
+    this.controller    = opts.controller || new EventEmitter();
+    this.tiles         = opts.tiles || {};
+    this.sortedUnits   = [];
+    this.TILESIZE      = opts.TILESIZE || 16;
+    this.FPS           = opts.FPS || 30;
+    this.canvas        = opts.canvas;
+    this.canvas.height = opts.height * this.TILESIZE + 1 || 418;
+    this.canvas.width  = opts.width * this.TILESIZE + 1 || 514;
+    this.context       = opts.canvas.getContext('2d');
+    this.grid          = opts.grid || false;
+    this.assets        = opts.assets || {};
+    this.viewOrigin    = { x: 0, y: 0 };
+}
+
+var proto = GameBoard.prototype;
+
+proto.tileUpdate = function (tiles) {
+    var self = this;
+    tiles.forEach(function (tile) {
+        var tileKey = tile.location.x + ':' + tile.location.y;
+        self.tiles[tileKey] = tile;
+    });
+
+    self.sortedUnits = self.getSortedUnits(self.tiles);
+};
+
+proto.draw = function () {
+    var self = this;
+    var canvasWidth = self.canvas.width;
+    var canvasHeight = self.canvas.height;
+    var tiles = Object.keys(self.tiles);
+
+    tiles.forEach(drawTile);
+    if (self.grid) drawGrid();
+    self.sortedUnits.forEach(drawUnit);
+
+    return;
+
+    function drawTile (locationKey) {
+        if (!(self.tiles[locationKey].visible)) return;
+
+        var tile = self.tiles[locationKey];
+        var tilePosition = self.getPosition(tile.location);
+        self.context.drawImage(self.assets[tile.style], tilePosition.x + 0.5, tilePosition.y + 0.5);
+    }
+
+    function drawUnit (unit) {
+        var unitPrepLocation = {
+            x : (unit.location.x - Math.floor(unit.size[0] / 2)),
+            y : (unit.location.y - unit.size[1] + 1)
+        };
+
+        var unitPosition = self.getPosition(unitPrepLocation);
+        self.context.drawImage(self.assets[unit.style], unitPosition.x + 0.5, unitPosition.y + 0.5);
+    }
+
+    function drawGrid () {
+        self.context.strokeStyle = '#ddd';
+        self.context.setLineDash([2,2]);
+        self.context.lineWidth = 1;
+
+        for (var x = 0.5; x < canvasWidth; x += self.TILESIZE) {
+            self.context.moveTo(x, 0);
+            self.context.lineTo(x, canvasHeight);
+        }
+
+        for (var y = 0.5; y < canvasHeight; y += self.TILESIZE) {
+            self.context.moveTo(0, y);
+            self.context.lineTo(canvasWidth, y);
+        }
+
+        self.context.stroke();
+    }
+
+};
+
+proto.clear = function () {
+    var self = this;
+    var canvasWidth = self.canvas.width;
+    var canvasHeight = self.canvas.height;
+    self.context.clearRect(0, 0, canvasWidth, canvasHeight);
+};
+
+proto.start = function () {
+    var self = this;
+    var FPS = this.FPS;
+    function render () {
+        setInterval(function () {
+            self.clear();
+            //if (requestAnimationFrame) requestAnimationFrame(render);
+            self.draw();
+        }, 1000 / FPS);
+    }
+    render();
+};
+
+proto.addUnit = function (unit) {
+    this.sortedUnits.push(unit);
+    this.sortedUnits = this.sortedUnits.sort(compare);
+};
+
+proto.addTile = function (tile) {
+    return this.tileUpdate([tile]);
+};
+
+proto.getSortedUnits = function (tiles) {
+    var tileArray = Object.keys(tiles);
+    var units = [];
+    if (!tileArray.length) return units;
+
+    tileArray.forEach(function getTile(tileLoc) {
+        var tile = tiles[tileLoc];
+        if (!tile.visible) return;
+        if (!tile.units) return;
+        tile.units.forEach(function getUnit(unit) {
+            units.push(unit);
+        });
+    });
+    units.sort(compare);
+    return units;
+};
+
+proto.getPosition = function (location) {
+    var self = this;
+
+    var position = {
+        x : (location.x * 16) + self.viewOrigin.x,
+        y : (location.y * 16) + self.viewOrigin.y
+    };
+    return position;
+};
+
+function compare (a, b) {
+    if (a.location.y < b.location.y) return -1;
+    else if (a.location.y > b.location.y) return 1;
+    else if (a.location.x < b.location.x) return -1;
+    else if (a.location.x > b.location.x) return 1;
+    else return 0;
+}
+
+module.exports = GameBoard;
+
+},{"events":1}],4:[function(require,module,exports){
+module.exports = createMap;
+
+function createMap (x, y) {
+    var map = [];
+    for (var i = 0; i < x; i ++) {
+        for (var j = 0; j < y; j++) {
+            var tile = {
+                location: {x: i, y: j},
+                style: 'grass',
+                visible: true,
+                units: []
+            }
+            map.push(tile);
+        }
+    }
+    return map;
+}
+
+},{}],5:[function(require,module,exports){
+var units = [
+{
+    style: 'woman',
+    size: [1,2],
+    location: {
+        x: 2,
+        y: 2
+    }
+}
+];
+
+var Woman = {
+    style: 'woman',
+    size: [1,2],
+    location: {
+        x: 3,
+        y: 2
+    }
+};
+
+var Man = {
+    style: 'man',
+    size: [1,2],
+    location: {
+        x: 5,
+        y: 4
+    }
+};
+
+var Tree = {
+    style: 'tree',
+    size: [3,3],
+    location: {
+        x: 4,
+        y: 8
+    }
+};
+
+exports.units = units;
+exports.Woman = Woman;
+exports.Man = Man;
+exports.Tree = Tree;
+
+},{}]},{},[2]);
