@@ -92,9 +92,9 @@ proto.start = function () {
     var self = this;
     var FPS = this.FPS;
     function render () {
-        setTimeout(function () {
+        setInterval(function () {
             self.clear();
-            requestAnimationFrame(render);
+            //if (requestAnimationFrame) requestAnimationFrame(render);
             self.draw();
         }, 1000 / FPS);
     }
