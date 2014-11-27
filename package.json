@@ -22,10 +22,18 @@
     "testling": "^1.7.1"
   },
   "testling": {
-      "files": "test/example.js",
-      "browsers": [
-          "chrome/latest",
-          "firefox/latest"
-      ]
+    "files": "test/example.js",
+    "browsers": [
+      "ie/8..latest",
+      "firefox/17..latest",
+      "firefox/nightly",
+      "chrome/22..latest",
+      "chrome/canary",
+      "opera/12..latest",
+      "opera/next",
+      "safari/5.1..latest",
+      "ipad/6.0..latest",
+      "iphone/6.0..latest"
+    ]
   }
 }
