@@ -7,7 +7,7 @@
     "build": "browserify example/example.js -o example/bundle.js",
     "watch": "watchify example/example.js -o example/bundle.js",
     "example": "npm run build && open example/index.html",
-    "test": "tap test"
+    "test": "testling -u"
   },
   "author": "Alexander Vados",
   "license": "MIT",
@@ -22,7 +22,7 @@
     "testling": "^1.7.1"
   },
   "testling": {
-    "files": "test/example.js",
+    "files": "test/test.js",
     "browsers": [
       "ie/8..latest",
       "firefox/17..latest",

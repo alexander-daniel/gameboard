@@ -146,3 +146,12 @@ var gameBoard = new GameBoard({
 The GameBoard will be accessing your assets by its `style` attribute.
 
 For example, if `unit.style` is `'woman'`, the GameBoard will search through its `assets` hash for `GameBoard.assets['woman']`, which will reference your sprite!
+
+
+## Tests
+You'll have to run them locally, as testlingci is having issues. No matter!
+
+just run:
+```bash
+npm test
+```
