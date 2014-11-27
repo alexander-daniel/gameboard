@@ -6,12 +6,27 @@
   "scripts": {
     "build": "browserify example/example.js -o example/bundle.js",
     "watch": "watchify example/example.js -o example/bundle.js",
-    "example": "npm run build && open example/index.html"
+    "example": "npm run build && open example/index.html",
+    "test": "tap test"
   },
   "author": "Alexander Vados",
   "license": "MIT",
   "devDependencies": {
     "browserify": "^6.3.2",
     "watchify": "^2.1.1"
+  },
+  "dependencies": {
+    "gm": "^1.17.0",
+    "tap": "^0.4.13",
+    "tape": "^3.0.3",
+    "testling": "^1.7.1"
+  },
+  "testling": {
+      "files": "test/example.js",
+      "browsers": [
+          "chrome/latest",
+          "firefox/latest",
+          "safari/latest"
+      ]
   }
 }
