@@ -1,6 +1,6 @@
 {
   "name": "gameboard",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "simple canvas wrapper for visualizing output from game engines",
   "main": "index.js",
   "scripts": {
