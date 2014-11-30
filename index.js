@@ -60,7 +60,7 @@ proto.draw = function () {
 
         var tile = self.tiles[locationKey];
         var tilePosition = self.getPosition(tile.location);
-        self.context.drawImage(self.assets[tile.style], tilePosition.x + 0.5, tilePosition.y + 0.5);
+        self.context.drawImage(self.assets[tile.style.toLowerCase()], tilePosition.x + 0.5, tilePosition.y + 0.5);
     }
 
     function drawUnit (unit) {
@@ -70,7 +70,7 @@ proto.draw = function () {
         };
 
         var unitPosition = self.getPosition(unitPrepLocation);
-        self.context.drawImage(self.assets[unit.style], unitPosition.x + 0.5, unitPosition.y + 0.5);
+        self.context.drawImage(self.assets[unit.style.toLowerCase()], unitPosition.x + 0.5, unitPosition.y + 0.5);
     }
 
     function drawGrid () {
