@@ -13,9 +13,10 @@ function GameBoard (opts) {
     this.TILESIZE      = opts.TILESIZE || 16;
     this.FPS           = opts.FPS || 30;
     this.canvas        = opts.canvas;
-    this.canvas.height = opts.height * this.TILESIZE + 1 || 418;
-    this.canvas.width  = opts.width * this.TILESIZE + 1 || 514;
+    this.canvas.height = opts.height || window.innerHeight;
+    this.canvas.width  = opts.width || window.innerWidth;
     this.context       = opts.canvas.getContext('2d');
+    this.context.imageSmoothingEnabled = false;
     this.grid          = opts.grid || false;
     this.assets        = opts.assets || {};
     this.viewOrigin    = { x: 0, y: 0 };
@@ -25,9 +26,9 @@ var proto = GameBoard.prototype;
 
 proto.tileUpdate = function (tiles) {
     var self = this;
-    var tileUnits = self.scrapeUnits(tiles);
     
     tiles.forEach(manageTile);
+    var tileUnits = self.scrapeUnits(tiles);
     tileUnits.forEach(manageUnit);
 
     function manageUnit (unit) {
@@ -108,12 +109,55 @@ proto.start = function () {
             self.draw();
         }, 1000 / FPS);
     }
+
     render();
+
+    self.mouseDown = false;
+    self.translatePos = {
+        x: self.canvas.width / 2,
+        y: self.canvas.height / 2
+    };
+    
+    window.onkeydown = function(e) {
+        if (e.which === 37) self.viewOrigin.x += 16; //'left'
+        if (e.which === 38) self.viewOrigin.y += 16; //'up'
+        if (e.which === 39) self.viewOrigin.x -= 16; //'right'
+        if (e.which === 40) self.viewOrigin.y -= 16; //'down'
+        else return;
+    };
+
+    // when the window is resized, reset the draw zone
+    window.onresize = function() {
+        self.canvas.height = window.innerHeight;
+        self.canvas.width = window.innerWidth;
+        self.context.imageSmoothingEnabled = false;
+    };
+
+    self.startDragOffset = {};
+    self.canvas.addEventListener('mousedown', function(evt) {
+        self.mouseDown = true;
+        self.startDragOffset.x = evt.clientX - self.viewOrigin.x;
+        self.startDragOffset.y = evt.clientY - self.viewOrigin.y;
+    });
+
+    self.canvas.addEventListener('mouseup', function() {
+        self.mouseDown = false;
+    });
+
+    self.canvas.addEventListener('mouseout', function() {
+        self.mouseDown = false;
+    });
+
+    self.canvas.addEventListener('mousemove', function(evt) {
+        if (self.mouseDown) {
+            self.viewOrigin.x = (evt.clientX - self.startDragOffset.x);
+            self.viewOrigin.y = (evt.clientY - self.startDragOffset.y);
+        }
+    });
 };
 
 proto.addUnit = function (unit) {
     if (!unit.id) unit.id = hat();
-    console.log(unit.id);
     this.units[unit.id] = unit;
     this.sortUnits();
 };
@@ -147,7 +191,8 @@ proto.sortUnits = function () {
         var unit = units[unitId];
         unitArray.push(unit);
     });
-    unitArray.sort(compare);
+
+    if (unitArray.length > 1) unitArray.sort(compare);
     self.sortedUnits = unitArray;
 };
 
@@ -155,9 +200,10 @@ proto.getPosition = function (location) {
     var self = this;
 
     var position = {
-        x : (location.x * 16) + self.viewOrigin.x,
-        y : (location.y * 16) + self.viewOrigin.y
+        x : (location.x * self.TILESIZE) + self.viewOrigin.x,
+        y : (location.y * self.TILESIZE) + self.viewOrigin.y
     };
+
     return position;
 };
 
