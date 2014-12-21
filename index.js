@@ -13,8 +13,8 @@ function GameBoard (opts) {
     this.TILESIZE      = opts.TILESIZE || 16;
     this.FPS           = opts.FPS || 30;
     this.canvas        = opts.canvas;
-    this.canvas.height = opts.height || window.innerHeight;
-    this.canvas.width  = opts.width || window.innerWidth;
+    this.canvas.height = opts.height * this.TILESIZE || window.innerHeight;
+    this.canvas.width  = opts.width * this.TILESIZE || window.innerWidth;
     this.context       = opts.canvas.getContext('2d');
     this.context.imageSmoothingEnabled = false;
     this.grid          = opts.grid || false;
